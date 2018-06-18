@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<!-- 未使用 -->
+<generatorConfiguration>
+
+    <classPathEntry location="./mysql-connector-java-5.1.35.jar" />
+    <context id="MySQL" defaultModelType="flat" targetRuntime="MyBatis3Simple">
+        <commentGenerator>
+            <property name="suppressAllComments" value="false" />
+            <property name="suppressDate" value="true" />
+        </commentGenerator>
+
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+          connectionURL="jdbc:mysql://127.0.0.1:3306/quant"
+          userId="quant"
+          password="quant">
+        </jdbcConnection>
+        
+		<javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.diffwind.dao.model" targetProject="./">
+            <property name="enableSubPackages" value="false" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="com.diffwind.dao.mapping"  targetProject="./">
+            <property name="enableSubPackages" value="false" />
+        </sqlMapGenerator>
+
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.diffwind.dao.mapper"  targetProject="./">
+            <property name="enableSubPackages" value="false" />
+        </javaClientGenerator>
+
+
+<!--  -->
+		<table tableName="eastmoney_stock_bbsj" domainObjectName="EastmoneyStockBbsj"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+
+    </context>
+
+</generatorConfiguration>

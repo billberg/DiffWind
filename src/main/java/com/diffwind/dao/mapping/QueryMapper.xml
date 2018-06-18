@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.diffwind.dao.mapper.QueryMapper" >
+  
+  <!-- TODO 日期改为动态，应使用最近3年年报
+  投资收益有两类，一类是投资子公司，该类投资收益属于经营性收益；另一类是非主营业务投资，属于非经营性损益。
+  以下EBIT剔除了所有投资收益 -->
+  <!--  <select id="selectBySuodeshui" resultType="java.util.Map" >
+    with q1 as (select data->>'symbol' "symbol",(data->>'利润总额')::float "2016利润总额",(data->>'所得税费用')::float "2016所得税费用",(data->>'净利润')::float "2016净利润",
+		(data->>'所得税费用')::float/(data->>'利润总额')::float "2016所得税费用/利润总额",
+		(data->>'营业税金及附加')::float/(data->>'利润总额')::float "2016营业税金及附加/利润总额",
+		(data->>'营业总收入')::float-(data->>'营业总成本')::float "2016EBIT"
+		from xueqiu_stock_income_statement_json
+		where data->>'报表期截止日' = '20161231'
+		and (data->>'所得税费用')::float > 0.5e8
+		and (data->>'净利润')::float > 1e8
+		and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+		and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+			or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+		<![CDATA[ order by "所得税费用/利润总额" desc  ]]>   
+	),
+	q2 as (select data->>'symbol' "symbol",(data->>'利润总额')::float "2015利润总额",(data->>'所得税费用')::float "2015所得税费用",(data->>'净利润')::float "2015净利润",
+		(data->>'所得税费用')::float/(data->>'利润总额')::float "2015所得税费用/利润总额",
+		(data->>'营业税金及附加')::float/(data->>'利润总额')::float "2015营业税金及附加/利润总额",
+		(data->>'营业总收入')::float-(data->>'营业总成本')::float "2015EBIT"
+		from xueqiu_stock_income_statement_json
+		where data->>'报表期截止日' = '20151231'
+		and (data->>'所得税费用')::float > 0.5e8
+		and (data->>'净利润')::float > 1e8
+		and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+		and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+				or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+		<![CDATA[ order by "所得税费用/利润总额" desc  ]]>   
+	),
+	q3 as (select data->>'symbol' "symbol",(data->>'利润总额')::float "2014利润总额",(data->>'所得税费用')::float "2014所得税费用",(data->>'净利润')::float "2014净利润",
+		(data->>'所得税费用')::float/(data->>'利润总额')::float "2014所得税费用/利润总额",
+		(data->>'营业税金及附加')::float/(data->>'利润总额')::float "2014营业税金及附加/利润总额",
+		(data->>'营业总收入')::float-(data->>'营业总成本')::float "2014EBIT"
+		from xueqiu_stock_income_statement_json
+		where data->>'报表期截止日' = '20141231'
+		and (data->>'所得税费用')::float > 0.5e8
+		and (data->>'净利润')::float > 1e8
+		and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+		and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+				or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+		<![CDATA[ order by "所得税费用/利润总额" desc  ]]>   
+	),
+	hy as (select symbol, name, string_agg(hyname,',' order by hycode desc) "hyname"
+	  	from sina_zjhhangye_stock group by symbol,name)
+	
+	select hy.name,hy.hyname,q1.*,q2.*,q3.*
+	from q1, q2, q3, hy
+	where q1.symbol = q2.symbol
+	and q1.symbol = q3.symbol
+	and q1.symbol = hy.symbol
+	order by hy.hyname, q1."2016所得税费用/利润总额" desc
+  </select>  -->
+  
+  <!-- 近3年利润表年报数据均满足一定条件的案例
+  投资收益有两类，一类是投资子公司，该类投资收益属于经营性收益；另一类是非主营业务投资，属于非经营性损益。
+  以下近似估算EBIT剔除了所有投资收益
+  营业利润科目包含投资收益，但不包含营业外收益
+  对年度盈利质量进行简单评估（没有评估季度盈利质量） -->
+  <select id="selectBySuodeshui" resultType="java.util.Map"  parameterType="java.util.List">
+    with s1 as (select *,row_number() over w "rn"
+	from xueqiu_stock_income_statement_json
+	where data->>'报表期截止日' like '%1231'
+	and data->>'symbol' in
+    <foreach collection="list" item="item" index="index" open="(" separator="," close=")">#{item}</foreach>
+	WINDOW w AS (partition by data->>'symbol' order by data->>'报表期截止日' desc)
+	),
+	s2 as (select *
+	from s1
+	where s1.rn &lt;= 3
+	and (data->>'所得税费用')::float > 0.5e8
+	and (data->>'净利润')::float > 1e8
+	and (data->>'利润总额')::float > 0
+	and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+	-- and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+	--	or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+	and ((data->>'营业利润')::float IS NULL 
+		or (data->>'营业利润')::float > (data->>'净利润')::float)
+	
+	)
+	
+	-- select * from s2 a
+	-- where (select max(b.rn) from s2 b where b.data->>'symbol' = a.data->>'symbol') >= 3
+	select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日",
+			(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+			(data->>'所得税费用')::float/(data->>'利润总额')::float "所得税费用/利润总额",
+			(data->>'营业税金及附加')::float/(data->>'利润总额')::float "营业税金及附加/利润总额",
+			(data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float,0) "EBIT",
+			-- (data->>'营业总收入')::float-(data->>'营业总成本')::float "EBIT",
+			(data->>'营业利润')::float "营业利润",
+			CASE WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float,0) IS NULL
+				 THEN '缺数'
+				 WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float,0) &lt; (data->>'净利润')::float
+				 THEN '关注'
+				 WHEN (data->>'投资收益')::float/(data->>'营业利润')::float > 0.1
+				 THEN '关注-投资收益'
+				 WHEN ((data->>'营业外收入')::float-(data->>'营业外支出')::float)/(data->>'利润总额')::float > 0.1
+				 THEN '关注-营业外收益'
+            	 ELSE '正常'
+       		END "盈利质量"
+	from s2 a
+	where (select count(1) from s2 b where b.data->>'symbol' = a.data->>'symbol') = 3
+	order by data->>'symbol',data->>'报表期截止日' desc
+  </select>
+  
+  <!-- 金融行业利润表科目与其他行业不同，这里主要用于分析银行业 -->
+   <select id="selectBySuodeshui_JinRong" resultType="java.util.Map"  parameterType="java.util.List">
+    with s1 as (select *, row_number() over w "rn"
+	from xueqiu_stock_income_statement_json
+	where data->>'报表期截止日' like '%1231'
+	and data->>'symbol' in
+    <foreach collection="list" item="item" index="index" open="(" separator="," close=")">#{item}</foreach>
+	WINDOW w AS (partition by data->>'symbol' order by data->>'报表期截止日' desc)
+	),
+	s2 as (select *
+	from s1
+	where s1.rn &lt;= 3
+	and (data->>'所得税费用')::float > 0.5e8
+	and (data->>'净利润')::float > 1e8
+	and (data->>'利润总额')::float > 0
+	and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+	and ((data->>'营业利润')::float IS NULL 
+		or (data->>'营业利润')::float > (data->>'净利润')::float)
+	)
+	
+	-- select * from s2 a
+	-- where (select max(b.rn) from s2 b where b.data->>'symbol' = a.data->>'symbol') >= 3
+	select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日",
+			(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+			(data->>'所得税费用')::float/(data->>'利润总额')::float "所得税费用/利润总额",
+			(data->>'营业税金及附加')::float/(data->>'利润总额')::float "营业税金及附加/利润总额",
+			(data->>'营业利润')::float+(data->>'资产减值损失')::float "EBIT",
+			(data->>'营业利润')::float "营业利润",
+			(data->>'资产减值损失')::float "资产减值损失",
+			CASE WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float IS NULL
+				 THEN '缺数'
+				 WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float > 0.1
+				 THEN '关注-营业外收益'
+            	 ELSE '正常'
+       		END "盈利质量"
+	from s2 a
+	where (select count(1) from s2 b where b.data->>'symbol' = a.data->>'symbol') = 3
+	order by a.data->>'symbol',a.data->>'报表期截止日' desc
+  </select>
+  
+  <!-- @Deprecated -->
+  <select id="selectByShui"  resultType="java.util.Map" parameterType="java.lang.String" >
+  with s1 as (select *
+	from xueqiu_stock_income_statement_json
+	where data->>'symbol' = #{symbol,jdbcType=CHAR}
+	and data->>'报表期截止日' like '%1231'
+	order by data->>'报表期截止日' desc
+	limit 3
+	)
+	
+	select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日",
+			(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+			(data->>'所得税费用')::float/(data->>'利润总额')::float "所得税费用/利润总额",
+			(data->>'营业税金及附加')::float/(data->>'利润总额')::float "营业税金及附加/利润总额",
+			(data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+(data->>'资产减值损失')::float "EBIT",
+			(data->>'营业利润')::float "营业利润",
+			CASE WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+(data->>'资产减值损失')::float IS NULL
+				 THEN '缺数'
+				 WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+(data->>'资产减值损失')::float &lt; (data->>'净利润')::float
+				 THEN '关注'
+            	 ELSE '正常'
+       		END "盈利质量"
+    from s1
+	where 
+	(data->>'所得税费用')::float > 0.5e8
+	and (data->>'净利润')::float > 1e8
+	and (data->>'利润总额')::float > 0
+	and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+	-- and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+	--	or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+	and ((data->>'营业利润')::float IS NULL 
+		or (data->>'营业利润')::float > (data->>'净利润')::float)
+	order by data->>'报表期截止日' desc
+	
+  </select>
+  
+  <!-- @Deprecated -->
+  <select id="selectByShui_JinRong"  resultType="java.util.Map" parameterType="java.lang.String" >
+  with s1 as (select *
+	from xueqiu_stock_income_statement_json
+	where data->>'symbol' = #{symbol,jdbcType=CHAR}
+	and data->>'报表期截止日' like '%1231'
+	order by data->>'报表期截止日' desc
+	limit 3
+	)
+	
+	select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日",
+			(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+			(data->>'所得税费用')::float/(data->>'利润总额')::float "所得税费用/利润总额",
+			-- (data->>'营业税金及附加')::float/(data->>'利润总额')::float "营业税金及附加/利润总额",
+			(data->>'营业利润')::float+(data->>'资产减值损失')::float "EBIT",
+			(data->>'营业利润')::float "营业利润",
+			(data->>'资产减值损失')::float "资产减值损失",
+			CASE WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float IS NULL
+				 THEN '缺数'
+				 WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float > 0.1
+				 THEN '关注'
+            	 ELSE '正常'
+       		END "盈利质量"
+    from s1
+	where 
+	(data->>'所得税费用')::float > 1e8
+	and (data->>'净利润')::float > 2e8
+	and (data->>'利润总额')::float > 0
+	and (data->>'所得税费用')::float/(data->>'利润总额')::float > 0.1
+	-- and ((data->>'营业总收入')::float-(data->>'营业总成本')::float IS NULL 
+	--	or (data->>'营业总收入')::float-(data->>'营业总成本')::float > (data->>'净利润')::float)
+	and ((data->>'营业利润')::float IS NULL 
+		or (data->>'营业利润')::float > (data->>'净利润')::float)
+	order by data->>'报表期截止日' desc
+	
+  </select>
+  
+  <!-- 查询个股利润表指标，对盈利质量进行简单评估 
+  非经常性损益科目：资产减值损失，投资收益，公允价值变动收益-->
+  <select id="selectIncomeStatementBySymbol"  resultType="java.util.Map" parameterType="java.lang.String" >
+  select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日", 
+ 		 	(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+			-- (data->>'所得税费用')::float/(data->>'利润总额')::float "所得税费用/利润总额",
+			-- (data->>'营业税金及附加')::float/(data->>'利润总额')::float "营业税金及附加/利润总额",
+			(data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float, 0) "EBIT",
+			(data->>'营业利润')::float "营业利润",
+			CASE WHEN (data->>'税金及附加')::float IS NULL
+				 THEN (data->>'营业税金及附加')::float
+            	 ELSE (data->>'税金及附加')::float
+       		END "税金及附加",
+			CASE WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float, 0) IS NULL
+				 THEN '缺数'
+				 WHEN (data->>'营业总收入')::float-(data->>'营业总成本')::float+(data->>'财务费用')::float+COALESCE((data->>'资产减值损失')::float, 0) &lt; (data->>'净利润')::float
+				 THEN '关注-EBIT'
+				 WHEN (data->>'营业利润')::float > 0 and (data->>'投资收益')::float/(data->>'营业利润')::float > 0.1
+				 THEN '关注-投资收益'
+				 WHEN (data->>'利润总额')::float > 0 and ((data->>'营业外收入')::float-(data->>'营业外支出')::float)/(data->>'利润总额')::float > 0.1
+				 THEN '关注-营业外收益'
+            	 ELSE '正常'
+       		END "盈利质量"
+	from xueqiu_stock_income_statement_json
+	where 
+	data->>'symbol' = #{symbol,jdbcType=CHAR}
+	order by data->>'报表期截止日' desc
+  </select>
+  
+  <!-- 金融行业利润表科目与其他行业不同，这里主要用于分析银行业 -->
+  <select id="selectIncomeStatementBySymbol_JinRong"  resultType="java.util.Map" parameterType="java.lang.String" >
+  select data->>'symbol' "symbol",data->>'报表期截止日' "报表期截止日", 
+  		(data->>'利润总额')::float "利润总额",(data->>'所得税费用')::float "所得税费用",(data->>'净利润')::float "净利润",
+		(data->>'营业利润')::float+(data->>'资产减值损失')::float "EBIT",
+		(data->>'营业利润')::float "营业利润",
+		(data->>'资产减值损失')::float "资产减值损失",
+			CASE WHEN (data->>'税金及附加')::float IS NULL
+				 THEN (data->>'营业税金及附加')::float
+            	 ELSE (data->>'税金及附加')::float
+       		END "税金及附加",
+			CASE WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float IS NULL
+				 THEN '缺数'
+				 WHEN ((data->>'加:营业外收入')::float-(data->>'减:营业外支出')::float)/(data->>'利润总额')::float > 0.1
+				 THEN '关注-营业外收益'
+            	 ELSE '正常'
+       		END "盈利质量"
+	from xueqiu_stock_income_statement_json
+	where 
+	data->>'symbol' = #{symbol,jdbcType=CHAR}
+	order by data->>'报表期截止日' desc
+  </select>
+  
+  
+  <select id="selectRzrqSymbols"  resultType="java.lang.String" >
+  	select distinct(LOWER((rzrq_data->>'market')) || (rzrq_data->>'scode'))
+	from eastmoney_stock_rzrq_json
+  </select>
+  <!-- 融资融券数据 -->
+  <select id="selectRzrqBySymbol"  resultType="java.util.Map" parameterType="java.lang.String" >
+	select x.symbol,(e.rzrq_data->>'tdate')::date "date", (e.rzrq_data->>'rzrqyecz')::float "rzrqyecz", x.close "close"
+	from eastmoney_stock_rzrq_json e, xueqiu_stock_day_fq x
+	where e.rzrq_data->>'scode' = substr(#{symbol},3) 
+	and (e.rzrq_data->>'tdate')::date = x.date
+	and x.symbol = #{symbol}
+	order by e.rzrq_data->>'tdate' desc
+  </select>
+</mapper>

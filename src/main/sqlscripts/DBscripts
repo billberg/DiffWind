@@ -1,0 +1,28 @@
+# mac
+#pg_ctl start -D /u01/pgdata
+pg_ctl start
+
+-- pg_dump
+pg_dump diffview > /Users/zhangjz/diffview.dump
+psql diffview < diffview.dump
+psql --set ON_ERROR_STOP=on dbname < infile
+
+$ pg_dump -Fc diffview > /Users/zhangjz/diffview.dump
+$ pg_restore -d diffview diffview.dump
+
+
+# windows
+initdb -E UTF-8 -D D:\postgresql-10.0-1-windows-x64-binaries\pgsql\data --locale=Chinese_China
+-- create db
+createdb diffview
+dropdb diffview
+-- create role
+CREATE ROLE diffview LOGIN PASSWORD 'diffview';
+GRANT ALL PRIVILEGES ON DATABASE diffview to diffview ;
+-- connect
+psql -d diffview
+-- start
+cd D:\postgresql-10.0-1-windows-x64-binaries\pgsql\bin
+pg_ctl start  -D D:\postgresql-10.0-1-windows-x64-binaries\pgsql\data
+pg_ctl stop  -D D:\postgresql-10.0-1-windows-x64-binaries\pgsql\data
+

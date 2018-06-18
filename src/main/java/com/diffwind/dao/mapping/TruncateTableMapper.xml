@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.diffwind.dao.mapper.TruncateTableMapper"> 
+  
+  <delete id="truncateTable" parameterType="java.lang.String" >
+  	truncate table "${tableName}"
+  </delete>
+  
+  <update id="swapTable" parameterType="java.lang.String">
+    do $$declare
+    begin
+       ALTER table ${tableName} rename to ${tableName}_tmp;
+       ALTER table ${tableName}_swap  rename to ${tableName};
+       ALTER table ${tableName}_tmp  rename to ${tableName}_swap;
+    end$$
+</update>
+  
+</mapper>

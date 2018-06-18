@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<!-- DiffWind使用PostgreSQL数据库 -->
+<generatorConfiguration>
+
+    <classPathEntry location="./postgresql-9.4.1208.jar" />
+    <context id="PGTables" defaultModelType="flat" targetRuntime="MyBatis3Simple">
+        <commentGenerator>
+            <property name="suppressAllComments" value="false" />
+            <property name="suppressDate" value="true" />
+        </commentGenerator>
+       
+
+        <jdbcConnection driverClass="org.postgresql.Driver"
+          connectionURL="jdbc:postgresql://127.0.0.1:5432/diffview"
+          userId="diffview"
+          password="diffview">
+        </jdbcConnection>
+        
+		<javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.diffwind.dao.model" targetProject="../src/main/java/">
+            <property name="enableSubPackages" value="false" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="com.diffwind.dao.mapping"  targetProject="../src/main/java/">
+            <property name="enableSubPackages" value="false" />
+        </sqlMapGenerator>
+
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.diffwind.dao.mapper"  targetProject="../src/main/java/">
+            <property name="enableSubPackages" value="false" />
+        </javaClientGenerator>
+
+        
+<!--
+ 
+        <table tableName="XUEQIU_FINANCE" domainObjectName="XueqiuFinance"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+        <table tableName="XUEQIU_STOCK" domainObjectName="XueqiuStock"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+        <table tableName="SINA_STOCK" domainObjectName="SinaStock"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+       
+        <table tableName="XUEQIU_STOCK_STATS" domainObjectName="XueqiuStockStats"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+        <table tableName="sina_stock_xq_info" domainObjectName="SinaStockXqInfo"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        <table tableName="xueqiu_stock_day_fq" domainObjectName="XueqiuStockDayFq"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+         <table tableName="xueqiu_stock_day" domainObjectName="XueqiuStockDay"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+         <table tableName="sina_stock_xq_info" domainObjectName="SinaStockXqInfo"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+         <table tableName="xueqiu_hangye" domainObjectName="XueqiuHangye"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        <table tableName="xueqiu_hangye_stock" domainObjectName="XueqiuHangyeStock"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+         <table tableName="sina_zjhhangye" domainObjectName="SinaZjhhangye"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        <table tableName="sina_zjhhangye_stock" domainObjectName="SinaZjhhangyeStock"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+        <table tableName="diffvalue_stock_stats" domainObjectName="DiffvalueStockStats"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+         <table tableName="xueqiu_stock_finance" domainObjectName="XueqiuStockFinance"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+       
+        <table tableName="xueqiu_stock_shareschg" domainObjectName="XueqiuStockShareschg"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+        <table tableName="diffvalue_stock_finance_stats_q" domainObjectName="DiffvalueStockFinanceStatsQ"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> 
+        
+        <table tableName="diffvalue_stock_stats_d" domainObjectName="DiffvalueStockStatsD"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+        <table tableName="diffvalue_stock_risk_stats_d" domainObjectName="DiffvalueStockRiskStatsD"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+        <table tableName="tdx_stock_day" domainObjectName="TdxStockDay"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        
+        <table tableName="tdx_index_day" domainObjectName="TdxIndexDay"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+        <table tableName="eastmoney_stock_rzrq_json" domainObjectName="EastmoneyStockRzrqJson"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table> -->
+        <table tableName="eastmoney_stock_bbsj" domainObjectName="EastmoneyStockBbsj"	 enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        </table>
+    </context>
+
+</generatorConfiguration>
