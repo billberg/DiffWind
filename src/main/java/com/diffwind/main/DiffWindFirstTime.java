@@ -10,7 +10,7 @@ import com.diffwind.data.XueqiuStockShareschgDataRobot;
 import com.diffwind.stats.DataHandler;
 
 /**
- * DiffWind初次执行时准备历史数据，初始化数据库
+ * DiffWind初次执行时需准备历史数据，初始化数据库
  * ［通达信］日线数据说明：
  * 作者使用的通达信软件客户端为Windows版本"招商证券-智远理财"客户端，通过"数据管理 > 盘后数据下载"下载日线数据。
  * 日线数据的存储路经为：C:/zd_zszq/vipdoc/ （C:/zd_zszq为软件安装路径）
