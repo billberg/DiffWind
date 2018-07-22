@@ -208,7 +208,9 @@ public class MemStatsStockQuarter {
 					weightedroe1Y = weightedroe4Q = weightedroeExp = finQ.getWeightedroe();
 					
 					//
-					EBIT1Y = EBIT4Q = (Double)isRecords.get(i).get("EBIT");
+					if (i < isRecords.size()) { 
+						EBIT1Y = EBIT4Q = (Double)isRecords.get(i).get("EBIT");
+					}
 				} else {
 					if (finLastY != null) {
 						netprofit1Y = finLastY.getNetprofit();
@@ -236,7 +238,7 @@ public class MemStatsStockQuarter {
 						EBIT1Y = (Double)isLastY.get("EBIT");
 					}
  
-					if (isLastY != null && isLastSameQ != null) {
+					if (isLastY != null && isLastSameQ != null && i < isRecords.size() ) {
 						boolean hasNa = DoubleCheck.checkHasNa((Double)isLastY.get("EBIT"), (Double)isRecords.get(i).get("EBIT"),
 								(Double)isLastSameQ.get("EBIT"));
 						if (!hasNa) {
@@ -338,14 +340,17 @@ public class MemStatsStockQuarter {
 				//主营业务收入同比增长率
 				statsQ.setMainBizIncomeGrowthRate(finQ.getMainbusincgrowrate());
 				
-				//EBIT
-				statsQ.setEBIT((Double)isRecords.get(i).get("EBIT"));
 				statsQ.setEBIT1Y(EBIT1Y);
 				statsQ.setEBIT4Q(EBIT4Q);
 				
-				//缴税
-				statsQ.setJingyingShui((Double)isRecords.get(i).get("税金及附加"));
-				statsQ.setSuodeShui((Double)isRecords.get(i).get("所得税费用"));
+				//fix bug: 因为损益表的数据少于主要财务指标的数据导致IndexOutOfBoundsException，应判断数据是否越界
+				if (i < isRecords.size()) { 
+					//EBIT
+					statsQ.setEBIT(DoubleCheck.ifNull2NaN((Double)isRecords.get(i).get("EBIT")));
+					//缴税
+					statsQ.setJingyingShui((Double)isRecords.get(i).get("税金及附加"));
+					statsQ.setSuodeShui((Double)isRecords.get(i).get("所得税费用"));
+				}
 
 				quarterHist.add(statsQ);
 

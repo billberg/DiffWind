@@ -54,7 +54,6 @@ import com.ql.util.express.DefaultContext;
 import com.ql.util.express.ExpressRunner;
 import com.ql.util.express.IExpressContext;
 
-import sort.CollectionTest.Man;
 
 /**
  * 根据指标筛选
@@ -771,22 +770,22 @@ public class MingxingCasesFilter {
 			
 			//列:[25-36]
 			//实际年份不同股票可能不一致
-			headers.add("0Y\n盈利质量");
 			headers.add("-1Y\n盈利质量");
 			headers.add("-2Y\n盈利质量");
-			headers.add("0Y\n利润总额");
+			headers.add("-3Y\n盈利质量");
 			headers.add("-1Y\n利润总额");
 			headers.add("-2Y\n利润总额");
-			headers.add("0Y\n所得税费用");
+			headers.add("-3Y\n利润总额");
 			headers.add("-1Y\n所得税费用");
 			headers.add("-2Y\n所得税费用");
-			headers.add("0Y\n所得税费用/利润总额");
+			headers.add("-3Y\n所得税费用");
 			headers.add("-1Y\n所得税费用/利润总额");
 			headers.add("-2Y\n所得税费用/利润总额");
+			headers.add("-3Y\n所得税费用/利润总额");
 			
 			//
 			List<String> yearsName = new ArrayList<String>();
-			for (int i = 0; i < years; i++) {
+			for (int i = 1; i <= years; i++) {
 				yearsName.add("-" + i + "Y");
 			}
 			
