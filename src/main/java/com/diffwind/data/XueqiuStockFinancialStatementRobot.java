@@ -150,8 +150,9 @@ public class XueqiuStockFinancialStatementRobot {
 					//科目名前的序号清除
 					keys[i] = keys[i].replaceAll("一、|二、|三、|四、|五、|六、|七、|八、|九、|十、|\\(一\\)|\\(二\\)|\\(三\\)|\\(四\\)|\\(五\\)|\\(六\\)|\\(七\\)|\\(八\\)|\\(九\\)|\\(十\\)", "");
 				
-					//减:所得税 --> 所得税费用
-					if (keys[i].equals("减:所得税")) {
+					//减:所得税 --> 所得税费用, 减:所得税费用 --> 所得税费用
+					//if (keys[i].equals("减:所得税")) {
+					if (keys[i].startsWith("减:所得税")) {
 						keys[i] = "所得税费用";
 					}
 				}
